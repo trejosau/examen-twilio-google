@@ -16,7 +16,7 @@ const startServer = async () => {
         await sequelize.authenticate();
         console.log('Conexión a la base de datos establecida.');
 
-        await sequelize.sync({ alter: true })
+        await sequelize.sync({ alter: false })
             .then(() => console.log('Tablas creadas o actualizadas correctamente'))
             .catch((error) => console.error('Error al crear las tablas:', error));
 

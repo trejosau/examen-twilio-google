@@ -10,6 +10,7 @@ const router = Router();
 router.use('/users', userRoutes);
 router.use('/salons', salonRoutes);
 router.use('/reservations', reservationRoutes);
+// routes/index.ts
 router.use('/twilio', twilioRoutes);
 
 export default router;
