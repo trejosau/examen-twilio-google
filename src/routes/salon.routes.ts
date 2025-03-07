@@ -5,7 +5,7 @@ import { authMiddleware } from "../middlewares/authMiddleware";
 const router = Router();
 
 router.post('/', authMiddleware(['admin']), SalonController.createSalon);
-router.get('/', authMiddleware(['admin', 'user']), SalonController.getSalons);
+router.get('/', SalonController.getSalons);
 router.get('/:id', authMiddleware(['admin', 'user']), SalonController.getSalonById);
 router.put('/:id', authMiddleware(['admin']), SalonController.updateSalon);
 
