@@ -1,0 +1,373 @@
+{
+  "tables": [
+    {
+      "name": "users",
+      "columns": [
+        {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        {
+          "name": "username",
+          "type": "varchar(50)",
+          "unique": true,
+          "notNull": true
+        },
+        {
+          "name": "email",
+          "type": "varchar(100)",
+          "unique": true,
+          "notNull": true
+        },
+        {
+          "name": "password_hash",
+          "type": "varchar(255)",
+          "notNull": true
+        },
+        {
+          "name": "is_active",
+          "type": "boolean",
+          "default": true
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz",
+          "default": "NOW()",
+          "notNull": true
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamptz",
+          "default": "NOW()",
+          "notNull": true
+        }
+      ]
+    },
+    {
+      "name": "devices",
+      "columns": [
+        {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        {
+          "name": "device_id",
+          "type": "varchar(50)",
+          "unique": true,
+          "notNull": true
+        },
+        {
+          "name": "name",
+          "type": "varchar(100)",
+          "notNull": true
+        },
+        {
+          "name": "device_type",
+          "type": "enum",
+          "enumValues": ["drone", "rc_car", "weather_station", "arduino_uno", "esp32", "raspberry_pi", "other"],
+          "notNull": true
+        },
+        {
+          "name": "location",
+          "type": "varchar(100)"
+        },
+        {
+          "name": "is_active",
+          "type": "boolean",
+          "default": true
+        },
+        {
+          "name": "user_id",
+          "type": "integer",
+          "references": {
+            "table": "users",
+            "column": "id"
+          },
+          "onDelete": "SET NULL"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz",
+          "default": "NOW()",
+          "notNull": true
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamptz",
+          "default": "NOW()",
+          "notNull": true
+        }
+      ]
+    },
+    {
+      "name": "sensors",
+      "columns": [
+        {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        {
+          "name": "device_id",
+          "type": "integer",
+          "notNull": true,
+          "references": {
+            "table": "devices",
+            "column": "id"
+          },
+          "onDelete": "CASCADE"
+        },
+        {
+          "name": "name",
+          "type": "varchar(100)",
+          "notNull": true
+        },
+        {
+          "name": "sensor_type",
+          "type": "enum",
+          "enumValues": ["temperature", "humidity", "pressure", "accelerometer", "gyroscope", "gps", "altimeter", "voltage", "current", "battery_level", "light", "proximity", "speed", "direction", "other"],
+          "notNull": true
+        },
+        {
+          "name": "unit",
+          "type": "varchar(20)"
+        },
+        {
+          "name": "topic",
+          "type": "varchar(150)",
+          "notNull": true
+        },
+        {
+          "name": "min_value",
+          "type": "double precision"
+        },
+        {
+          "name": "max_value",
+          "type": "double precision"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz",
+          "default": "NOW()",
+          "notNull": true
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamptz",
+          "default": "NOW()",
+          "notNull": true
+        }
+      ],
+      "constraints": [
+        {
+          "name": "check_value_range",
+          "check": "min_value < max_value"
+        }
+      ]
+    },
+    {
+      "name": "sensor_readings",
+      "columns": [
+        {
+          "name": "id",
+          "type": "bigserial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        {
+          "name": "sensor_id",
+          "type": "integer",
+          "notNull": true,
+          "references": {
+            "table": "sensors",
+            "column": "id"
+          },
+          "onDelete": "CASCADE"
+        },
+        {
+          "name": "value",
+          "type": "double precision",
+          "notNull": true
+        },
+        {
+          "name": "timestamp",
+          "type": "timestamptz",
+          "default": "NOW()",
+          "notNull": true
+        }
+      ],
+      "constraints": [
+        {
+          "name": "check_value_in_range",
+          "check": "value IS NOT NULL"
+        }
+      ],
+      "partition": {
+        "type": "RANGE",
+        "column": "timestamp"
+      }
+    },
+    {
+      "name": "alerts",
+      "columns": [
+        {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        {
+          "name": "sensor_id",
+          "type": "integer",
+          "notNull": true,
+          "references": {
+            "table": "sensors",
+            "column": "id"
+          },
+          "onDelete": "CASCADE"
+        },
+        {
+          "name": "name",
+          "type": "varchar(100)",
+          "notNull": true
+        },
+        {
+          "name": "condition_type",
+          "type": "enum",
+          "enumValues": ["greater_than", "less_than", "equal_to", "not_equal_to", "greater_or_equal", "less_or_equal", "between"],
+          "notNull": true
+        },
+        {
+          "name": "threshold_value1",
+          "type": "double precision",
+          "notNull": true
+        },
+        {
+          "name": "threshold_value2",
+          "type": "double precision"
+        },
+        {
+          "name": "is_active",
+          "type": "boolean",
+          "default": true
+        },
+        {
+          "name": "notification_email",
+          "type": "boolean",
+          "default": false
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz",
+          "default": "NOW()",
+          "notNull": true
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamptz",
+          "default": "NOW()",
+          "notNull": true
+        }
+      ],
+      "constraints": [
+        {
+          "name": "check_between_values",
+          "check": "(condition_type != 'between') OR (threshold_value2 IS NOT NULL AND threshold_value1 < threshold_value2)"
+        }
+      ]
+    }
+  ],
+  "indexes": [
+    {
+      "name": "idx_sensor_readings_sensor_id",
+      "table": "sensor_readings",
+      "columns": ["sensor_id"]
+    },
+    {
+      "name": "idx_sensor_readings_timestamp",
+      "table": "sensor_readings",
+      "columns": ["timestamp"]
+    },
+    {
+      "name": "idx_devices_user_id",
+      "table": "devices",
+      "columns": ["user_id"]
+    },
+    {
+      "name": "idx_sensors_device_id",
+      "table": "sensors",
+      "columns": ["device_id"]
+    },
+    {
+      "name": "idx_devices_device_type",
+      "table": "devices",
+      "columns": ["device_type"]
+    },
+    {
+      "name": "idx_sensors_sensor_type",
+      "table": "sensors",
+      "columns": ["sensor_type"]
+    }
+  ],
+  "views": [
+    {
+      "name": "latest_sensor_readings",
+      "query": "SELECT DISTINCT ON (sr.sensor_id) sr.sensor_id, s.name AS sensor_name, s.sensor_type, s.unit, d.id AS device_id, d.name AS device_name, d.device_type, sr.value, sr.timestamp FROM sensor_readings sr JOIN sensors s ON sr.sensor_id = s.id JOIN devices d ON s.device_id = d.id ORDER BY sr.sensor_id, sr.timestamp DESC"
+    }
+  ],
+  "relationships": [
+    {
+      "name": "devices_users_fk",
+      "source": {
+        "table": "devices",
+        "column": "user_id"
+      },
+      "target": {
+        "table": "users",
+        "column": "id"
+      },
+      "type": "many-to-one"
+    },
+    {
+      "name": "sensors_devices_fk",
+      "source": {
+        "table": "sensors",
+        "column": "device_id"
+      },
+      "target": {
+        "table": "devices",
+        "column": "id"
+      },
+      "type": "many-to-one"
+    },
+    {
+      "name": "sensor_readings_sensors_fk",
+      "source": {
+        "table": "sensor_readings",
+        "column": "sensor_id"
+      },
+      "target": {
+        "table": "sensors",
+        "column": "id"
+      },
+      "type": "many-to-one"
+    },
+    {
+      "name": "alerts_sensors_fk",
+      "source": {
+        "table": "alerts",
+        "column": "sensor_id"
+      },
+      "target": {
+        "table": "sensors",
+        "column": "id"
+      },
+      "type": "many-to-one"
+    }
+  ]
+}
